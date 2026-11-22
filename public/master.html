@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Instructor Master Screen — Guess the Hidden K</title>
+    <meta
+      name="description"
+      content="Instructor Master Screen for Guess the Hidden K. Set hidden K, track every student group's draws and guesses live, project safely, and export results."
+    />
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/master.css" />
+  </head>
+  <body>
+    <main class="page-wide">
+      <nav class="topbar" aria-label="Master controls">
+        <div class="topbar-brand">
+          <a href="/" class="brand-link">Guess the Hidden K</a>
+          <span class="badge badge-accent">Master Screen</span>
+          <span class="badge badge-mono" id="master-room-code">ROOM —</span>
+          <button id="copy-link-btn" type="button" class="ghost btn-sm">Copy Join Link</button>
+          <button id="show-qr-btn" type="button" class="secondary btn-sm">Show Join QR</button>
+        </div>
+
+        <div class="topbar-actions">
+          <button
+            id="privacy-toggle-btn"
+            type="button"
+            class="privacy-toggle"
+            title="Hides K, sample ranges, and student guesses while projecting before Reveal"
+          >
+            <span id="privacy-toggle-text">Projector-Safe: ON</span>
+          </button>
+          <button id="export-summary-btn" type="button" class="ghost btn-sm">Export Summary CSV</button>
+          <button id="export-events-btn" type="button" class="ghost btn-sm">Export Decisions CSV</button>
+          <span class="badge" id="master-conn-badge">
+            <span class="dot offline" id="master-conn-dot"></span>
+            <span id="master-conn-label">Connecting</span>
+          </span>
+        </div>
+      </nav>
+
+      <!-- Instructor Authentication Gate (when opening on a new device) -->
+      <section id="master-auth-gate" class="card auth-gate" hidden>
+        <div class="card-body">
+          <p class="eyebrow">Instructor Access</p>
+          <h1 style="font-size: 1.9rem;">Unlock Master Screen</h1>
+          <p class="small">
+            Enter the instructor key or passcode for room
+            <strong id="auth-gate-room" class="tabular"></strong>.
+          </p>
+          <form id="master-auth-form" style="margin-top: 1rem;">
+            <div class="field">
+              <label for="master-auth-input">Instructor Key / Passcode</label>
+              <input
+                id="master-auth-input"
+                type="password"
+                autocomplete="off"
+                placeholder="Paste key or passcode"
+                required
+              />
+            </div>
+            <div class="button-stack">
+              <button id="master-auth-submit" type="submit" class="primary">
+                Open Master Screen
+              </button>
+            </div>
+            <p id="master-auth-error" class="alert alert-error" style="margin-top: 0.85rem;" hidden></p>
+          </form>
+        </div>
+      </section>
+
+      <!-- Main Master Workspace -->
+      <section id="master-workspace" hidden>
+        <h1 class="eyebrow" style="margin-bottom: 0.7rem; font-size: 0.82rem;">
+          Live Classroom Control &amp; Group Decision Tracker
+        </h1>
+
+        <!-- Round Switcher Bar -->
+        <div class="round-strip" style="margin-bottom: 1.1rem;">
+          <div class="round-pills" id="round-pills">
+            <span class="small" style="margin: 0;">No rounds started yet. Enter Hidden K to begin Round 1.</span>
+          </div>
+          <div class="button-row">
+            <span class="badge badge-mono" id="host-key-chip" title="Click to copy your instructor key so you can reopen on another device">
+              Instructor Key: ••••••
+            </span>
+            <button id="copy-host-key-btn" type="button" class="ghost btn-sm">Copy Key</button>
+          </div>
+        </div>
+
+        <div class="master-layout">
+          <!-- Left Sidebar: Round Setup, Reveal, Live Feed -->
+          <aside class="master-sidebar">
+            <div class="card">
+              <div class="card-body">
+                <div class="section">
+                  <h2>Round Setup</h2>
+                  <label for="k-input">Hidden K (masked while typing)</label>
+                  <input
+                    id="k-input"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    placeholder="Type integer K ≥ 2"
+                  />
+                  <p class="helper">
+                    Each digit displays as a dot so you can type K safely even on a projector.
+                  </p>
+
+                  <div class="field" style="margin-top: 0.9rem;">
+                    <label>Sampling Mode</label>
+                    <div class="segmented" role="group" aria-label="Sampling mode">
+                      <button type="button" id="mode-independent-btn" class="active" data-mode="independent">
+                        Independent
+                      </button>
+                      <button type="button" id="mode-shared-btn" data-mode="shared">
+                        Shared Stream
+                      </button>
+                    </div>
+                    <p id="mode-helper" class="helper">
+                      Each group draws its own independent random sample from 1 to K.
+                    </p>
+                  </div>
+
+                  <div class="button-stack">
+                    <button id="start-round-btn" type="button" class="primary">
+                      Start Round 1
+                    </button>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h2>Round Controls</h2>
+                  <div class="button-row" style="margin-bottom: 0.65rem;">
+                    <span class="badge" id="active-round-status-badge">Lobby</span>
+                    <span class="badge" id="active-round-mode-badge" hidden>Independent</span>
+                  </div>
+
+                  <div class="button-stack">
+                    <button id="lock-toggle-btn" type="button" class="secondary" disabled>
+                      Lock Submissions
+                    </button>
+                    <button id="reveal-k-btn" type="button" class="success-btn" disabled>
+                      Reveal K &amp; Scores
+                    </button>
+                    <button id="hide-k-btn" type="button" class="ghost" disabled hidden>
+                      Hide K Again
+                    </button>
+                  </div>
+
+                  <div class="reveal-box">
+                    <strong>Hidden Answer (Viewing Round <span id="viewing-round-num">—</span>)</strong>
+                    <p id="master-reveal-text" class="small">Start a round to lock in a secret K.</p>
+                    <div id="master-reveal-value" class="reveal-value"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body">
+                <h2>Live Decision Feed</h2>
+                <p class="small" style="margin-top: -0.35rem; margin-bottom: 0.75rem;">
+                  Real-time log of group sample requests and guess locks.
+                </p>
+                <div id="activity-feed" class="activity-list">
+                  <p class="empty">No decisions recorded yet.</p>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Right Main Content: KPIs, Tracker Table, Charts, Cumulative -->
+          <section class="master-main">
+            <div class="stats">
+              <div class="stat">
+                <span class="stat-label">Groups Joined</span>
+                <span id="kpi-groups" class="stat-value">0</span>
+                <span id="kpi-online" class="stat-sub">0 online</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Guesses Locked</span>
+                <span id="kpi-submitted" class="stat-value">0 / 0</span>
+                <span id="kpi-submitted-sub" class="stat-sub">Waiting for round</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Avg Requested</span>
+                <span id="kpi-avg-req" class="stat-value">—</span>
+                <span id="kpi-avg-req-sub" class="stat-sub">Mean sample size n</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Top Score</span>
+                <span id="kpi-top-score" class="stat-value">—</span>
+                <span id="kpi-top-winner" class="stat-sub">Shown after Reveal</span>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body">
+                <div class="tab-bar">
+                  <div class="tab-buttons" role="tablist">
+                    <button type="button" class="tab-btn active" data-tab="tracker" id="tab-tracker">
+                      Group Decisions
+                    </button>
+                    <button type="button" class="tab-btn" data-tab="charts" id="tab-charts">
+                      Debrief Charts
+                    </button>
+                    <button type="button" class="tab-btn" data-tab="cumulative" id="tab-cumulative">
+                      All Rounds
+                    </button>
+                  </div>
+                  <span id="privacy-hint-badge" class="badge badge-success">
+                    Guesses &amp; samples masked for projection
+                  </span>
+                </div>
+
+                <!-- Tab 1: Group Decision Tracker Table -->
+                <div id="panel-tracker">
+                  <div id="tracker-empty" class="empty" style="padding: 1.5rem 0.5rem;">
+                    No student groups have joined yet. Click <strong>Show Join QR</strong> or share
+                    room code <strong id="empty-room-code" class="tabular"></strong> to invite
+                    students.
+                  </div>
+
+                  <div id="tracker-table-wrap" class="table-wrap" hidden>
+                    <table class="tracker-table">
+                      <thead>
+                        <tr>
+                          <th class="sortable" data-sort="rank">Rank</th>
+                          <th class="sortable" data-sort="groupName">Group</th>
+                          <th class="sortable" data-sort="status">Status</th>
+                          <th class="sortable" data-sort="requestedCount">Requested (n)</th>
+                          <th>Sample Range</th>
+                          <th class="sortable" data-sort="guess">Guess K̂</th>
+                          <th class="sortable" data-sort="absError">|K̂ − K|</th>
+                          <th class="sortable" data-sort="score">Score</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tracker-tbody"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Tab 2: Post-Reveal Intro Stats Debrief Charts -->
+                <div id="panel-charts" hidden>
+                  <div id="charts-locked-notice" class="alert" hidden>
+                    Debrief charts unlock automatically once you click <strong>Reveal K &amp; Scores</strong>
+                    (or turn off Projector-Safe Mode to preview privately).
+                  </div>
+
+                  <div id="charts-content" class="charts-grid" hidden>
+                    <div class="chart-panel">
+                      <h3>Group Guesses vs. Actual K</h3>
+                      <p class="small" style="margin-top: 0;">
+                        Compare where each group placed K̂ relative to the true K (green vertical line).
+                      </p>
+                      <div id="chart-guesses-container"></div>
+                    </div>
+
+                    <div class="chart-panel">
+                      <h3>Sample Size (n) vs. Score Trade-Off</h3>
+                      <p class="small" style="margin-top: 0;">
+                        Shows how requesting too few or too many numbers affected each group&apos;s final score.
+                      </p>
+                      <div id="chart-scatter-container"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab 3: Multi-Round Cumulative Leaderboard -->
+                <div id="panel-cumulative" hidden>
+                  <div id="cumulative-empty" class="empty" style="padding: 1.25rem 0.5rem;">
+                    Multi-round totals will appear here as groups complete rounds.
+                  </div>
+                  <div id="cumulative-table-wrap" class="table-wrap" hidden>
+                    <table class="tracker-table">
+                      <thead id="cumulative-thead"></thead>
+                      <tbody id="cumulative-tbody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <!-- QR Code Join Modal -->
+    <div id="qr-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Student Join</p>
+            <h2 id="qr-modal-title" style="margin-bottom: 0;">Scan or Enter Room Code</h2>
+          </div>
+          <button type="button" class="modal-close" id="qr-close-btn" aria-label="Close">&times;</button>
+        </div>
+        <div class="qr-box">
+          <div id="qr-svg-container" class="qr-frame"></div>
+          <div id="qr-room-code-big" class="qr-code-big"></div>
+          <p id="qr-join-url" class="ui-text small" style="word-break: break-all; margin: 0;"></p>
+          <div class="button-row">
+            <button type="button" class="primary btn-sm" id="qr-copy-btn">Copy Join Link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Per-Group Decision Inspector Slide-Over Drawer -->
+    <div id="inspector-drawer" class="drawer-backdrop" role="dialog" aria-modal="true" aria-labelledby="inspector-title" hidden>
+      <div class="drawer-panel">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Group Decision Inspector</p>
+            <h2 id="inspector-title" style="margin-bottom: 0;">Group</h2>
+          </div>
+          <button type="button" class="modal-close" id="inspector-close-btn" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="button-row" style="margin-bottom: 1rem;">
+          <span class="badge badge-mono" id="inspector-pin-badge">Team PIN: ----</span>
+          <span class="badge" id="inspector-online-badge">Offline</span>
+          <span class="badge" id="inspector-status-badge">Waiting</span>
+        </div>
+
+        <div id="inspector-privacy-note" class="alert alert-warn" style="margin-bottom: 1rem;" hidden>
+          Projector-Safe Mode is ON. Sample values and guesses are hidden until Reveal K (or until
+          you toggle Projector-Safe OFF).
+        </div>
+
+        <div class="stats" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+          <div class="stat">
+            <span class="stat-label">Requested (n)</span>
+            <span id="inspector-count" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Guessed K</span>
+            <span id="inspector-guess" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Absolute Error</span>
+            <span id="inspector-error" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Score</span>
+            <span id="inspector-score" class="stat-value" style="color: var(--success);">—</span>
+          </div>
+        </div>
+
+        <div id="inspector-sample-section" class="section">
+          <h3>Observed Sample &amp; Intro Stats Estimators</h3>
+          <div id="inspector-estimators" class="estimators-grid"></div>
+          <div class="board" style="min-height: 110px; margin-top: 0.75rem;">
+            <div id="inspector-chips" class="numbers"></div>
+            <p id="inspector-chips-empty" class="empty">No numbers requested yet.</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Chronological Decision Timeline</h3>
+          <div id="inspector-timeline" class="timeline"></div>
+        </div>
+
+        <div class="section">
+          <h3>Moderation</h3>
+          <div class="button-row">
+            <button type="button" class="secondary btn-sm" id="inspector-unlock-btn">
+              Unlock Group Guess
+            </button>
+            <button type="button" class="danger-btn btn-sm" id="inspector-remove-btn">
+              Remove Group
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/common.js"></script>
+    <script src="/js/master.js"></script>
+  </body>
+</html>

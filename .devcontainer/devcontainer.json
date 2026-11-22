@@ -1,0 +1,12 @@
+{
+  "name": "Guess the Hidden K",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "postCreateCommand": "npm install && npm run build",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "Guess the Hidden K",
+      "onAutoForward": "openBrowser"
+    }
+  }
+}

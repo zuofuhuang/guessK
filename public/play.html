@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Group — Guess the Hidden K</title>
+    <meta
+      name="description"
+      content="Student group play screen for Guess the Hidden K. Request samples from 1 to hidden K and lock in your group's single guess."
+    />
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/play.css" />
+  </head>
+  <body>
+    <main class="page">
+      <nav class="topbar" aria-label="Room status">
+        <div class="topbar-brand">
+          <a href="/" class="brand-link">Guess the Hidden K</a>
+          <span class="badge badge-mono" id="topbar-room-code">ROOM —</span>
+          <span class="badge badge-accent" id="topbar-group-badge" hidden>Group</span>
+          <span class="badge badge-mono" id="topbar-team-code" title="Share this 4-digit code with teammates joining on another device" hidden>
+            Team PIN: ----
+          </span>
+        </div>
+        <div class="topbar-actions">
+          <span class="badge" id="topbar-round-badge" hidden>Lobby</span>
+          <span class="badge" id="connection-badge">
+            <span class="dot offline" id="connection-dot"></span>
+            <span id="connection-label">Connecting</span>
+          </span>
+          <button id="switch-group-btn" type="button" class="ghost btn-sm" hidden>
+            Switch Group
+          </button>
+        </div>
+      </nav>
+
+      <!-- Room error screen -->
+      <section id="room-error-view" class="card" hidden>
+        <div class="card-body lobby-panel">
+          <p class="eyebrow">Room Unavailable</p>
+          <h1>Could Not Join Room</h1>
+          <p id="room-error-text" class="subtitle" style="margin: 0.75rem auto 1.25rem;"></p>
+          <a href="/" class="btn primary">Back to Home</a>
+        </div>
+      </section>
+
+      <!-- Group Join / Create Step -->
+      <section id="group-join-view" hidden>
+        <header style="margin-bottom: 1rem;">
+          <p class="eyebrow">Student Group Entry</p>
+          <h1>Join Room <span id="join-heading-code" style="letter-spacing: 0.04em;"></span></h1>
+          <p class="subtitle">
+            Start a new group for your table, or join a teammate&apos;s existing group using their
+            4-digit Team PIN so everyone in your group sees the same live sample.
+          </p>
+        </header>
+
+        <div class="join-grid">
+          <article class="card">
+            <div class="card-body">
+              <h2>Create a New Group</h2>
+              <form id="create-group-form">
+                <div class="field">
+                  <label for="new-group-name">Group Name</label>
+                  <input
+                    id="new-group-name"
+                    type="text"
+                    placeholder="e.g. Group 1 or Team Gauss"
+                    maxlength="36"
+                    autocomplete="off"
+                    required
+                  />
+                </div>
+                <div class="button-stack">
+                  <button id="create-group-btn" type="submit" class="primary">
+                    Create &amp; Join Group
+                  </button>
+                </div>
+                <p class="helper">
+                  You&apos;ll receive a 4-digit Team PIN so teammates can sync on their own devices.
+                </p>
+                <p id="create-group-error" class="alert alert-error" style="margin-top: 0.85rem;" hidden></p>
+              </form>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-body">
+              <h2>Join an Existing Group</h2>
+              <div id="existing-groups-empty" class="empty">
+                No groups have joined this room yet. Create the first group on the left.
+              </div>
+              <div id="existing-groups-list" class="existing-groups" hidden></div>
+
+              <form id="join-existing-form" hidden>
+                <div class="field">
+                  <label for="existing-team-code">4-Digit Team PIN</label>
+                  <input
+                    id="existing-team-code"
+                    type="text"
+                    inputmode="numeric"
+                    class="input-mono"
+                    placeholder="e.g. 4829"
+                    maxlength="4"
+                    autocomplete="off"
+                    required
+                  />
+                  <p class="helper">
+                    Ask a teammate already in <strong id="selected-group-label"></strong> for their
+                    Team PIN (or ask your instructor).
+                  </p>
+                </div>
+                <div class="button-stack">
+                  <button id="join-existing-btn" type="submit" class="secondary">
+                    Join Selected Group
+                  </button>
+                </div>
+                <p id="join-existing-error" class="alert alert-error" style="margin-top: 0.85rem;" hidden></p>
+              </form>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Active Group Play Screen -->
+      <section id="play-view" hidden>
+        <div class="rules-card" style="margin-bottom: 1.15rem;">
+          <details id="rules-details" class="rules-details" open>
+            <summary>
+              <span>Game Rules &amp; Scoring Formula</span>
+              <span class="badge btn-sm ui-text" id="rules-toggle-hint">Toggle</span>
+            </summary>
+            <ol class="rules-list">
+              <li>
+                Score =
+                <span class="fraction">
+                  <span class="fraction-top">100</span>
+                  <span class="fraction-bottom">
+                    number of numbers requested + |guessed K - actual K|
+                  </span>
+                </span>
+              </li>
+              <li>Each draw is independent from 1 to K, so the same number can appear more than once.</li>
+              <li>
+                Request as many numbers as your group wants (at least 1), then lock in
+                <strong>only one final guess</strong>.
+              </li>
+            </ol>
+          </details>
+        </div>
+
+        <!-- Waiting for Round 1 -->
+        <div id="lobby-waiting-card" class="card" hidden>
+          <div class="card-body lobby-panel">
+            <p class="eyebrow">Connected &amp; Ready</p>
+            <h1 id="lobby-group-heading" style="font-size: clamp(1.8rem, 3.5vw, 2.6rem);"></h1>
+            <p class="subtitle" style="margin: 0.75rem auto 0;">
+              Waiting for your instructor to set the hidden <strong>K</strong> and start the round.
+              Your screen will update automatically as soon as the round begins.
+            </p>
+            <p class="helper" style="margin-top: 1rem;">
+              Teammates can join this group live with Room Code
+              <strong id="lobby-room-inline" class="tabular"></strong> and Team PIN
+              <strong id="lobby-pin-inline" class="tabular"></strong>.
+            </p>
+          </div>
+        </div>
+
+        <!-- Active / Locked / Revealed Round Layout -->
+        <div id="round-workspace" hidden>
+          <header style="margin-bottom: 1rem;">
+            <div class="button-row" style="justify-content: space-between;">
+              <div>
+                <p class="eyebrow" id="round-eyebrow">Round 1</p>
+                <h1 id="round-heading" style="font-size: clamp(1.85rem, 3.6vw, 2.7rem);">
+                  Guess the Hidden K
+                </h1>
+              </div>
+              <div class="button-row">
+                <span class="badge" id="round-progress-badge">0 / 0 submitted</span>
+                <span class="badge" id="devices-badge" hidden>1 device synced</span>
+              </div>
+            </div>
+          </header>
+
+          <div id="student-status-banner" class="alert" style="margin-bottom: 1rem;" hidden></div>
+
+          <div class="play-layout">
+            <!-- Left controls column -->
+            <aside class="card">
+              <div class="card-body">
+                <div class="section">
+                  <h2>Request Numbers</h2>
+                  <p class="small">
+                    Each click draws fresh numbers uniformly from <strong>1 to K</strong>.
+                  </p>
+                  <div class="button-grid">
+                    <button type="button" class="secondary draw-btn" data-count="1" id="draw-1-btn">
+                      Request 1
+                    </button>
+                    <button type="button" class="secondary draw-btn" data-count="3" id="draw-3-btn">
+                      Request 3
+                    </button>
+                    <button type="button" class="secondary draw-btn" data-count="5" id="draw-5-btn">
+                      Request 5
+                    </button>
+                    <button type="button" class="secondary draw-btn" data-count="10" id="draw-10-btn">
+                      Request 10
+                    </button>
+                  </div>
+                  <form id="custom-draw-form" class="custom-draw-row">
+                    <input
+                      id="custom-draw-input"
+                      type="number"
+                      min="1"
+                      max="100"
+                      step="1"
+                      placeholder="Custom (1–100)"
+                      aria-label="Custom number of draws"
+                    />
+                    <button id="custom-draw-btn" type="submit" class="ghost btn-sm">Request</button>
+                  </form>
+                </div>
+
+                <div class="section">
+                  <h2>Submit Group Guess</h2>
+
+                  <div id="guess-form-wrap">
+                    <form id="guess-form">
+                      <div class="field">
+                        <label for="guess-input">Your Group&apos;s Guess for K</label>
+                        <input
+                          id="guess-input"
+                          type="number"
+                          min="1"
+                          step="1"
+                          placeholder="Enter integer guess"
+                          autocomplete="off"
+                          required
+                        />
+                      </div>
+                      <div class="button-stack">
+                        <button id="submit-guess-btn" type="submit" class="primary">
+                          Lock In Final Guess
+                        </button>
+                      </div>
+                      <p class="helper" id="guess-helper-text">
+                        Request at least 1 number first. Each group gets only one guess per round.
+                      </p>
+                    </form>
+                  </div>
+
+                  <div id="guess-locked-wrap" class="locked-summary" hidden>
+                    <span class="stat-label">Submitted Guess</span>
+                    <div id="locked-guess-value" class="locked-guess-big">—</div>
+                    <p id="locked-guess-meta" class="small" style="margin-top: 0.2rem;"></p>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+            <!-- Right sample & reveal column -->
+            <section class="card">
+              <div class="card-body">
+                <h2>Your Group&apos;s Sample</h2>
+                <div class="stats">
+                  <div class="stat">
+                    <span class="stat-label">Requested</span>
+                    <span id="stat-count" class="stat-value">0</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-label">Smallest</span>
+                    <span id="stat-min" class="stat-value">-</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-label">Largest</span>
+                    <span id="stat-max" class="stat-value">-</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-label">Status</span>
+                    <span id="stat-status" class="stat-value" style="font-size: 1.18rem;">Ready</span>
+                  </div>
+                </div>
+
+                <div class="board">
+                  <div id="sample-numbers" class="numbers"></div>
+                  <p id="sample-empty" class="empty">
+                    No numbers requested yet. Click a request button on the left to draw from 1 to K.
+                  </p>
+                </div>
+
+                <p id="request-history-line" class="history-line" hidden></p>
+
+                <!-- Post-reveal results -->
+                <div id="reveal-card" class="reveal-hero" hidden>
+                  <div class="reveal-k-row">
+                    <div>
+                      <span class="stat-label" style="color: var(--success);">Actual Hidden Value</span>
+                      <div id="reveal-k-value" class="reveal-k-value">K = —</div>
+                    </div>
+                    <span id="reveal-rank-badge" class="badge badge-success" hidden>Rank #1</span>
+                  </div>
+
+                  <div id="reveal-score-breakdown" class="score-breakdown"></div>
+                </div>
+
+                <!-- Revealed Class Leaderboard -->
+                <div id="student-leaderboard-section" class="section" hidden>
+                  <h3>Class Results — Round <span id="student-lb-round"></span></h3>
+                  <div style="overflow-x: auto;">
+                    <table class="mini-table">
+                      <thead>
+                        <tr>
+                          <th>Rank</th>
+                          <th>Group</th>
+                          <th>Requested</th>
+                          <th>Guess</th>
+                          <th>Error</th>
+                          <th>Score</th>
+                        </tr>
+                      </thead>
+                      <tbody id="student-lb-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Past rounds summary for this group -->
+                <div id="past-rounds-section" class="section" hidden>
+                  <h3>Your Previous Rounds</h3>
+                  <div style="overflow-x: auto;">
+                    <table class="mini-table">
+                      <thead>
+                        <tr>
+                          <th>Round</th>
+                          <th>Actual K</th>
+                          <th>Requested</th>
+                          <th>Your Guess</th>
+                          <th>Error</th>
+                          <th>Score</th>
+                        </tr>
+                      </thead>
+                      <tbody id="past-rounds-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Final Guess Confirmation Modal -->
+    <div id="confirm-guess-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="confirm-guess-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">One Guess Per Round</p>
+            <h2 id="confirm-guess-title" style="margin-bottom: 0;">Confirm Your Final Guess</h2>
+          </div>
+          <button type="button" class="modal-close" id="confirm-close-btn" aria-label="Close">&times;</button>
+        </div>
+
+        <p class="small" style="margin-top: 0;">
+          Once locked in, your group cannot request more numbers or change your guess unless the
+          instructor unlocks it.
+        </p>
+
+        <div class="confirm-facts">
+          <div class="stat">
+            <span class="stat-label">Numbers Requested</span>
+            <span id="confirm-requested-val" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Guessed K</span>
+            <span id="confirm-guess-val" class="stat-value" style="color: var(--accent-deep);">0</span>
+          </div>
+        </div>
+
+        <div id="confirm-warning-box" class="alert alert-warn" style="margin-bottom: 1rem;" hidden></div>
+
+        <div class="button-row" style="justify-content: flex-end; margin-top: 1rem;">
+          <button type="button" class="ghost" id="confirm-cancel-btn">Go Back</button>
+          <button type="button" class="primary" id="confirm-submit-btn">Yes, Lock In Guess</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/common.js"></script>
+    <script src="/js/play.js"></script>
+  </body>
+</html>

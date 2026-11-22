@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guess the Hidden K — Online Intro Stats Classroom Game</title>
+    <meta
+      name="description"
+      content="Online multiplayer classroom version of Guess the Hidden K where student groups request samples, lock in one guess, and instructors track every decision live."
+    />
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/base.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <p class="eyebrow">Intro Stats Classroom Game</p>
+        <h1>Guess the Hidden K</h1>
+        <p class="subtitle">
+          Student groups request independent draws from 1 to a hidden <strong>K</strong>, weigh
+          sample size against accuracy, and lock in a single guess while the instructor tracks every
+          decision live.
+        </p>
+
+        <div class="rules-card" style="margin-top: 1.15rem; max-width: 52rem;">
+          <h2>Rules</h2>
+          <ol class="rules-list">
+            <li>
+              Score =
+              <span class="fraction">
+                <span class="fraction-top">100</span>
+                <span class="fraction-bottom">
+                  number of numbers requested + |guessed K - actual K|
+                </span>
+              </span>
+            </li>
+            <li>Each draw is independent, so the same number can appear more than once.</li>
+            <li>
+              Each group can request as many or as few numbers as they want, but may submit only one
+              guess per round.
+            </li>
+          </ol>
+        </div>
+      </header>
+
+      <section class="home-grid" aria-label="Game entry options">
+        <article class="card">
+          <div class="card-body">
+            <p class="eyebrow">For Students</p>
+            <h2>Join a Classroom Room</h2>
+            <p class="small">
+              Enter the 6-character room code shown on your instructor&apos;s screen (or scan the
+              room QR code).
+            </p>
+
+            <form id="student-join-form" style="margin-top: 1rem;">
+              <div class="field">
+                <label for="join-room-code">Room Code</label>
+                <input
+                  id="join-room-code"
+                  type="text"
+                  class="input-mono"
+                  placeholder="e.g. K7M4P2"
+                  autocomplete="off"
+                  maxlength="40"
+                  required
+                />
+              </div>
+              <div class="button-stack">
+                <button id="student-join-btn" type="submit" class="primary">
+                  Enter Room
+                </button>
+              </div>
+              <p id="student-join-error" class="alert alert-error" style="margin-top: 0.85rem;" hidden></p>
+            </form>
+
+            <div id="saved-student-shortcut" class="section" hidden>
+              <h3>Resume Your Group</h3>
+              <div id="saved-student-list" class="recent-list"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-body">
+            <div class="section">
+              <p class="eyebrow">For Instructors</p>
+              <h2>Master Tracking Screen</h2>
+              <p class="small">
+                Launch a live room to control hidden K, watch every group&apos;s sampling and guess
+                decisions in real time, and reveal results with debrief charts.
+              </p>
+
+              <form id="create-room-form" style="margin-top: 1rem;">
+                <div class="field">
+                  <label for="host-passcode-input">Instructor Passcode (optional)</label>
+                  <input
+                    id="host-passcode-input"
+                    type="password"
+                    placeholder="Leave blank to auto-generate a secure key"
+                    autocomplete="new-password"
+                  />
+                  <p class="helper">
+                    Set a memorable passcode (4+ chars) if you plan to reopen the Master Screen on a
+                    different device, or leave blank to auto-save in this browser.
+                  </p>
+                </div>
+                <div class="button-stack">
+                  <button id="create-room-btn" type="submit" class="primary">
+                    Create New Session
+                  </button>
+                </div>
+                <p id="create-room-error" class="alert alert-error" style="margin-top: 0.85rem;" hidden></p>
+              </form>
+            </div>
+
+            <div class="section">
+              <h3>Reopen Existing Master Room</h3>
+              <form id="reopen-room-form">
+                <div class="field">
+                  <label for="reopen-room-code">Room Code</label>
+                  <input
+                    id="reopen-room-code"
+                    type="text"
+                    class="input-mono"
+                    placeholder="e.g. K7M4P2"
+                    autocomplete="off"
+                  />
+                </div>
+                <div class="field">
+                  <label for="reopen-host-key">Instructor Key / Passcode</label>
+                  <input
+                    id="reopen-host-key"
+                    type="password"
+                    placeholder="Paste your key or passcode"
+                    autocomplete="off"
+                  />
+                </div>
+                <div class="button-stack">
+                  <button id="reopen-room-btn" type="submit" class="secondary">
+                    Open Master Screen
+                  </button>
+                </div>
+                <p id="reopen-room-error" class="alert alert-error" style="margin-top: 0.85rem;" hidden></p>
+              </form>
+            </div>
+
+            <div id="recent-master-section" class="section" hidden>
+              <h3>Your Recent Master Sessions</h3>
+              <div id="recent-master-list" class="recent-list"></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <footer class="footer-note">
+        Need the original single-screen offline version?
+        <a href="/offline/guessK.html">Open offline Guess the Hidden K</a>
+      </footer>
+    </main>
+
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <script src="/js/common.js"></script>
+    <script src="/js/home.js"></script>
+  </body>
+</html>
