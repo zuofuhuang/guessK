@@ -324,7 +324,7 @@ export class GameStore {
   startRound(
     rawRoomCode: string,
     hostSecret: string,
-    opts: { secretK: unknown; samplingMode?: SamplingMode }
+    opts: { secretK: unknown }
   ): { session: Session; round: Round } {
     const session = this.verifyHost(rawRoomCode, hostSecret);
     const validated = validateK(opts.secretK);
@@ -332,7 +332,7 @@ export class GameStore {
       throw new GameError(validated.error, 400);
     }
 
-    const samplingMode: SamplingMode = opts.samplingMode === 'shared' ? 'shared' : 'independent';
+    const samplingMode: SamplingMode = 'shared';
     const roundNumber = session.rounds.length + 1;
     const groupStates: Record<string, ReturnType<typeof createEmptyGroupRoundState>> = {};
     for (const groupId of Object.keys(session.groups)) {
@@ -361,7 +361,7 @@ export class GameStore {
       type: 'round_started',
       payload: {
         samplingMode,
-        note: `Round ${roundNumber} started (${samplingMode === 'shared' ? 'Shared Stream' : 'Independent Draws'})`,
+        note: `Round ${roundNumber} started`,
       },
     });
 

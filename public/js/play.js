@@ -334,10 +334,7 @@
     topbarRoundBadge.hidden = false;
     topbarRoundBadge.textContent = `Round ${round.roundNumber} · ${statusLabels[round.status] || round.status}`;
 
-    roundEyebrow.textContent =
-      round.samplingMode === 'shared'
-        ? `Round ${round.roundNumber} · Shared Sample Stream`
-        : `Round ${round.roundNumber} · Independent Draws`;
+    roundEyebrow.textContent = `Round ${round.roundNumber}`;
     roundHeading.textContent = state.group.name;
     roundProgressBadge.textContent = `${round.submittedCount} / ${round.totalGroups} groups submitted`;
 

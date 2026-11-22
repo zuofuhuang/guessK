@@ -41,13 +41,9 @@
   const copyHostKeyBtn = document.getElementById('copy-host-key-btn');
 
   const kInput = document.getElementById('k-input');
-  const modeIndependentBtn = document.getElementById('mode-independent-btn');
-  const modeSharedBtn = document.getElementById('mode-shared-btn');
-  const modeHelper = document.getElementById('mode-helper');
   const startRoundBtn = document.getElementById('start-round-btn');
 
   const activeRoundStatusBadge = document.getElementById('active-round-status-badge');
-  const activeRoundModeBadge = document.getElementById('active-round-mode-badge');
   const lockToggleBtn = document.getElementById('lock-toggle-btn');
   const revealKBtn = document.getElementById('reveal-k-btn');
   const hideKBtn = document.getElementById('hide-k-btn');
@@ -124,7 +120,6 @@
   let lastKnownActiveRound = null;
   let activeTab = 'tracker';
   let projectorSafe = true;
-  let samplingMode = 'independent';
   let secretKBuffer = '';
   let replaceOnNextDigit = false;
   let sortKey = 'status';
@@ -218,20 +213,6 @@
     replaceOnNextDigit = false;
     syncMaskedKInput();
   });
-
-  // Sampling mode toggle
-  function setSamplingMode(mode) {
-    samplingMode = mode === 'shared' ? 'shared' : 'independent';
-    modeIndependentBtn.classList.toggle('active', samplingMode === 'independent');
-    modeSharedBtn.classList.toggle('active', samplingMode === 'shared');
-    modeHelper.textContent =
-      samplingMode === 'shared'
-        ? 'All groups draw from the same random prefix so two groups requesting n numbers see the exact same n values.'
-        : 'Each group draws its own independent random sample from 1 to K.';
-  }
-
-  modeIndependentBtn.addEventListener('click', () => setSamplingMode('independent'));
-  modeSharedBtn.addEventListener('click', () => setSamplingMode('shared'));
 
   // Projector-Safe toggle
   function updatePrivacyUi() {
@@ -363,17 +344,12 @@
     if (!activeRound) {
       activeRoundStatusBadge.textContent = 'Lobby (No Active Round)';
       activeRoundStatusBadge.className = 'badge';
-      activeRoundModeBadge.hidden = true;
       lockToggleBtn.disabled = true;
       lockToggleBtn.textContent = 'Lock Submissions';
       revealKBtn.disabled = true;
       hideKBtn.disabled = true;
       hideKBtn.hidden = true;
     } else {
-      activeRoundModeBadge.hidden = false;
-      activeRoundModeBadge.textContent =
-        activeRound.samplingMode === 'shared' ? 'Shared Stream' : 'Independent Draws';
-
       if (activeRound.status === 'active') {
         activeRoundStatusBadge.textContent = `Round ${activeRound.roundNumber} · Open`;
         activeRoundStatusBadge.className = 'badge badge-success';
@@ -1033,7 +1009,7 @@
     startRoundBtn.disabled = true;
     socket.emit(
       'master:start_round',
-      { secretK: proposedK, samplingMode },
+      { secretK: proposedK },
       (res) => {
         startRoundBtn.disabled = false;
         if (!res || !res.ok) {

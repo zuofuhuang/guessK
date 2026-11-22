@@ -107,22 +107,8 @@
                   />
                   <p class="helper">
                     Each digit displays as a dot so you can type K safely even on a projector.
+                    Every group requesting <em>n</em> numbers sees the same first <em>n</em> draws.
                   </p>
-
-                  <div class="field" style="margin-top: 0.9rem;">
-                    <label>Sampling Mode</label>
-                    <div class="segmented" role="group" aria-label="Sampling mode">
-                      <button type="button" id="mode-independent-btn" class="active" data-mode="independent">
-                        Independent
-                      </button>
-                      <button type="button" id="mode-shared-btn" data-mode="shared">
-                        Shared Stream
-                      </button>
-                    </div>
-                    <p id="mode-helper" class="helper">
-                      Each group draws its own independent random sample from 1 to K.
-                    </p>
-                  </div>
 
                   <div class="button-stack">
                     <button id="start-round-btn" type="button" class="primary">
@@ -135,7 +121,6 @@
                   <h2>Round Controls</h2>
                   <div class="button-row" style="margin-bottom: 0.65rem;">
                     <span class="badge" id="active-round-status-badge">Lobby</span>
-                    <span class="badge" id="active-round-mode-badge" hidden>Independent</span>
                   </div>
 
                   <div class="button-stack">

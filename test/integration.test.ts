@@ -154,7 +154,7 @@ test('End-to-end real-time classroom session: master + 2 groups + multi-device t
     const startAck = await emitAck<{ ok: boolean; roundNumber: number }>(
       masterSock,
       'master:start_round',
-      { secretK: 75, samplingMode: 'independent' }
+      { secretK: 75 }
     );
     assert.equal(startAck.ok, true);
     assert.equal(startAck.roundNumber, 1);
@@ -183,8 +183,11 @@ test('End-to-end real-time classroom session: master + 2 groups + multi-device t
     const masterAfterDraw = await masterSync;
     assert.equal(masterAfterDraw.rounds[0].groups.find((g) => g.groupId === g1Data.group.id)?.requestedCount, 5);
 
-    // 6. Group 2 requests 3 draws, both groups lock in guesses
-    await emitAck(g2Sock, 'student:draw', { count: 3 });
+    // 6. Group 2 requests 3 draws, then 2 more -> must match Group 1's exact 5 numbers
+    const g2Draw1 = await emitAck<{ ok: boolean; newDraws: number[] }>(g2Sock, 'student:draw', { count: 3 });
+    assert.deepEqual(g2Draw1.newDraws, drawAck.newDraws.slice(0, 3));
+    const g2Draw2 = await emitAck<{ ok: boolean; newDraws: number[] }>(g2Sock, 'student:draw', { count: 2 });
+    assert.deepEqual([...g2Draw1.newDraws, ...g2Draw2.newDraws], drawAck.newDraws);
 
     const g1SubmitAck = await emitAck<{ ok: boolean }>(g1DevB, 'student:submit_guess', { guess: 75 });
     const g2SubmitAck = await emitAck<{ ok: boolean }>(g2Sock, 'student:submit_guess', { guess: 70 });
@@ -254,7 +257,7 @@ test('SQLite persistence preserves sessions, rounds, and cumulative totals acros
       const { group } = server1.store.createGroup(roomCode, 'Group Persist');
 
       // Round 1
-      server1.store.startRound(roomCode, 'persist123', { secretK: 30, samplingMode: 'independent' });
+      server1.store.startRound(roomCode, 'persist123', { secretK: 30 });
       server1.store.requestDraws(roomCode, group.joinToken, 4);
       server1.store.submitGuess(roomCode, group.joinToken, 30); // score = 100 / 4 = 25
       server1.store.setRoundStatus(roomCode, 'persist123', 'locked');
@@ -263,7 +266,7 @@ test('SQLite persistence preserves sessions, rounds, and cumulative totals acros
       server1.store.setRoundStatus(roomCode, 'persist123', 'revealed');
 
       // Round 2
-      server1.store.startRound(roomCode, 'persist123', { secretK: 50, samplingMode: 'shared' });
+      server1.store.startRound(roomCode, 'persist123', { secretK: 50 });
       server1.store.requestDraws(roomCode, group.joinToken, 5);
       server1.store.submitGuess(roomCode, group.joinToken, 45); // score = 100 / (5 + 5) = 10
       server1.store.setRoundStatus(roomCode, 'persist123', 'revealed');

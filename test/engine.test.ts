@@ -63,10 +63,9 @@ test('GameStore enforces secret isolation, single guess lock, shared stream, and
     const { group: g1 } = store.createGroup(session.roomCode, 'Group Alpha');
     const { group: g2 } = store.createGroup(session.roomCode, 'Group Beta');
 
-    // Start Round 1 in shared mode so both groups must observe identical prefixes
+    // Start Round 1 (every group sees the same first n numbers)
     store.startRound(session.roomCode, session.hostSecret, {
       secretK: 40,
-      samplingMode: 'shared',
     });
 
     // Cannot submit with 0 draws

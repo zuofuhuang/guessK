@@ -1,4 +1,4 @@
-export type SamplingMode = 'independent' | 'shared';
+export type SamplingMode = 'shared';
 
 export type RoundStatus = 'active' | 'locked' | 'revealed';
 

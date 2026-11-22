@@ -6,7 +6,7 @@ import express from 'express';
 import { Server as SocketIOServer, type Socket } from 'socket.io';
 import { buildMasterView, buildStudentView, normalizeRoomCode } from './game/engine.js';
 import { GameError, GameStore } from './game/store.js';
-import type { RoundStatus, SamplingMode } from './game/types.js';
+import type { RoundStatus } from './game/types.js';
 import { createApiRouter } from './routes/api.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -213,7 +213,7 @@ export async function createAppServer(opts?: {
       }
     });
 
-    socket.on('master:start_round', (payload: { secretK?: unknown; samplingMode?: SamplingMode }, ack?: AckFn) => {
+    socket.on('master:start_round', (payload: { secretK?: unknown }, ack?: AckFn) => {
       try {
         const meta = socketMetaMap.get(socket.id);
         if (!meta || meta.role !== 'master' || !meta.roomCode || !meta.hostSecret) {
@@ -221,7 +221,6 @@ export async function createAppServer(opts?: {
         }
         const { session, round } = store.startRound(meta.roomCode, meta.hostSecret, {
           secretK: payload?.secretK,
-          samplingMode: payload?.samplingMode,
         });
         broadcastRoomFull(session.roomCode);
         safeAck(ack, { ok: true, roundNumber: round.roundNumber });

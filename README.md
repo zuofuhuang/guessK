@@ -24,9 +24,7 @@ $$\text{Score} = \frac{100}{\text{number of numbers requested} + |\text{guessed 
 - Automatic post-reveal score breakdown with the visual fraction formula and class leaderboard.
 
 ### Instructor Master Screen (`/master/:roomCode`)
-- **Masked `Hidden K` input** (dots while typing) and per-round **Sampling Mode** toggle:
-  - **Independent Draws:** each group draws its own fresh random sample.
-  - **Shared Stream:** all groups draw prefixes from the same server sequence so two groups requesting `n` numbers see the exact same first `n` values.
+- **Masked `Hidden K` input** (dots while typing) and a **shared sample sequence** per round—any two groups requesting `n` numbers see the exact same first `n` values so strategies can be compared fairly without sampling luck.
 - **Projector-Safe Mode (ON by default):** hides `K`, every group's sample range, and submitted guesses while you project the Master Screen live—showing only progress (`n` requested and `Submitted ✓`) until you click **Reveal K & Scores**. Toggle OFF anytime to peek privately on your own device.
 - **Per-Group Decision Inspector:** click **Inspect** on any group to view their chronological decision timeline (`+3 → +5 → Submit`), Team PIN, full sorted sample, Intro Stats estimators (`max`, `(n+1)/n · max`, `2·mean − 1`), and moderation controls (**Unlock Guess** / **Remove Group**).
 - **Post-Reveal Debrief Charts:** interactive SVG plots comparing **Group Guesses vs. Actual K** and **Sample Size (`n`) vs. Score**.

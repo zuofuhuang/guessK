@@ -158,20 +158,14 @@ export function computeSampleStats(draws: number[]): {
 
 export function drawNumbersForGroup(round: Round, groupState: GroupRoundState, count: number): number[] {
   const newDraws: number[] = [];
+  const startIdx = groupState.draws.length;
+  const neededLength = startIdx + count;
 
-  if (round.samplingMode === 'shared') {
-    const startIdx = groupState.draws.length;
-    const neededLength = startIdx + count;
-    while (round.sharedSequence.length < neededLength) {
-      round.sharedSequence.push(randomIntFrom1To(round.secretK));
-    }
-    for (let i = startIdx; i < neededLength; i += 1) {
-      newDraws.push(round.sharedSequence[i]);
-    }
-  } else {
-    for (let i = 0; i < count; i += 1) {
-      newDraws.push(randomIntFrom1To(round.secretK));
-    }
+  while (round.sharedSequence.length < neededLength) {
+    round.sharedSequence.push(randomIntFrom1To(round.secretK));
+  }
+  for (let i = startIdx; i < neededLength; i += 1) {
+    newDraws.push(round.sharedSequence[i]);
   }
 
   groupState.draws.push(...newDraws);
