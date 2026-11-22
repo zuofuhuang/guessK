@@ -145,8 +145,26 @@
     writeJsonStorage(STORAGE_KEYS.studentSessions, map);
   }
 
+  const API_BASE = String(
+    (window.GUESSK_CONFIG && window.GUESSK_CONFIG.apiBaseUrl) || ''
+  ).replace(/\/+$/, '');
+
+  function apiUrl(path) {
+    if (!path) return API_BASE || '/';
+    if (/^https?:\/\//i.test(path)) return path;
+    const normalized = path.startsWith('/') ? path : `/${path}`;
+    return `${API_BASE}${normalized}`;
+  }
+
+  function createSocket() {
+    if (API_BASE) {
+      return window.io(API_BASE, { transports: ['websocket', 'polling'] });
+    }
+    return window.io();
+  }
+
   async function apiJson(url, options = {}) {
-    const res = await fetch(url, {
+    const res = await fetch(apiUrl(url), {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -169,6 +187,9 @@
   }
 
   window.GuessK = {
+    API_BASE,
+    apiUrl,
+    createSocket,
     escapeHtml,
     normalizeRoomInput,
     formatTime,

@@ -3,12 +3,39 @@ import QRCode from 'qrcode';
 import { buildDecisionLogCsv, buildRoundSummaryCsv, normalizeRoomCode } from '../game/engine.js';
 import { GameError, type GameStore } from '../game/store.js';
 
-function getOrigin(req: Request): string {
+function normalizeOrigin(raw: string): string | null {
+  try {
+    const parsed = new URL(raw.trim());
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    return parsed.origin;
+  } catch {
+    return null;
+  }
+}
+
+function getBackendOrigin(req: Request): string {
   const forwardedProto = req.headers['x-forwarded-proto'];
   const proto = typeof forwardedProto === 'string' ? forwardedProto.split(',')[0].trim() : req.protocol;
   const host = req.headers['x-forwarded-host'] ?? req.get('host') ?? 'localhost:3000';
   const hostStr = Array.isArray(host) ? host[0] : host;
   return `${proto}://${hostStr}`;
+}
+
+function getAppOrigin(req: Request): string {
+  const envUrl = process.env.PUBLIC_APP_URL ? normalizeOrigin(process.env.PUBLIC_APP_URL) : null;
+  if (envUrl) return envUrl;
+
+  if (typeof req.query.appOrigin === 'string') {
+    const fromQuery = normalizeOrigin(req.query.appOrigin);
+    if (fromQuery) return fromQuery;
+  }
+
+  if (typeof req.headers.origin === 'string') {
+    const fromHeader = normalizeOrigin(req.headers.origin);
+    if (fromHeader) return fromHeader;
+  }
+
+  return getBackendOrigin(req);
 }
 
 function getHostSecretFromReq(req: Request): string {
@@ -44,7 +71,7 @@ export function createApiRouter(store: GameStore, onRoomChanged: (roomCode: stri
         throw new GameError('Custom instructor passcode must be at least 4 characters (or leave blank to auto-generate).', 400);
       }
       const session = store.createSession(passcode);
-      const origin = getOrigin(req);
+      const origin = getAppOrigin(req);
       res.status(201).json({
         roomCode: session.roomCode,
         hostSecret: session.hostSecret,
@@ -132,7 +159,7 @@ export function createApiRouter(store: GameStore, onRoomChanged: (roomCode: stri
   router.get('/sessions/:roomCode/qr', async (req, res) => {
     try {
       const session = store.requireSession(req.params.roomCode);
-      const origin = getOrigin(req);
+      const origin = getAppOrigin(req);
       const joinUrl = `${origin}/play/${session.roomCode}`;
       const svg = await QRCode.toString(joinUrl, {
         type: 'svg',

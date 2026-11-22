@@ -36,19 +36,43 @@ $$\text{Score} = \frac{100}{\text{number of numbers requested} + |\text{guessed 
 
 ## Hosting So Students Can Easily Join
 
-Because hidden `K` protection and live multi-group syncing require a Node.js backend (GitHub Pages only serves static files), this repository includes turnkey cloud launch options directly from GitHub:
+Because hidden `K` protection and live multi-group syncing require a Node.js backend, you can either host the **backend on Google Cloud Run + frontend on Cloudflare Workers** (both free tier) or run everything on a single Node host:
 
-### Option 1: One-Click Deploy on Render (Free HTTPS URL, Recommended)
+### Option 1: Google Cloud Run (Backend) + Cloudflare Workers (Frontend) — Recommended Free Tier
+
+This splits static website delivery onto Cloudflare's global edge while Google Cloud Run handles the hidden `K` RNG, Socket.IO rooms, and live tracking (scaling to 0 between classes).
+
+#### Step A — Deploy the Backend on Google Cloud Run
+1. Open **Google Cloud Console → Cloud Run → Create Service**.
+2. Choose **Continuously deploy from a repository** → connect `zuofuhuang/guessK` (`main` branch, **Dockerfile**).
+3. Configure for free-tier classroom WebSockets:
+   - **Region:** `us-central1` (Tier 1 free tier)
+   - **Authentication:** Allow public access (unauthenticated invocations)
+   - **Memory / CPU:** `512 MiB` / `1 vCPU`
+   - **Scaling:** Min instances `0`, **Max instances `1`** *(keeps all groups on one live instance)*
+   - **Concurrency:** `250`, **Request timeout:** `3600` seconds, **Session affinity:** Enabled
+   - **Environment variables:**
+     - `CORS_ORIGIN`: your Cloudflare Worker URL (e.g., `https://guessk-web.<your-subdomain>.workers.dev`)
+     - `PUBLIC_APP_URL`: your Cloudflare Worker URL (optional—QR codes also auto-detect it from the browser origin)
+4. Copy the resulting Cloud Run URL (e.g., `https://guessk-online-xxxx.run.app`).
+
+#### Step B — Deploy the Frontend on Cloudflare Workers
+1. In **Cloudflare Dashboard → Workers & Pages → Create → Workers → Connect to Git**, select `zuofuhuang/guessK`.
+   *(Cloudflare automatically reads `wrangler.jsonc` and `worker/index.js` to serve `public/` and handle `/play/:roomCode`, `/master/:roomCode`, and `/config.js`.)*
+2. Under **Settings → Variables and Secrets**, add a plaintext variable:
+   - `BACKEND_URL` = your Cloud Run URL (e.g., `https://guessk-online-xxxx.run.app`)
+3. Save and deploy. Open your `https://guessk-web.<your-subdomain>.workers.dev` URL, click **Create New Session**, and click **Show Join QR** for your students.
+
+*(Or deploy the Worker from your terminal with `npx wrangler deploy` after setting `BACKEND_URL` in `wrangler.jsonc`.)*
+
+### Option 2: Single-Service Deploy on Render (Free HTTPS URL)
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/zuofuhuang/guessK)
 
 1. Click **Deploy to Render** above (reads `render.yaml` automatically).
-2. Render builds and starts the server on Node 22 and gives you a permanent public URL such as `https://guessk-online.onrender.com`.
-3. Open that URL before class, click **Create New Session**, then click **Show Join QR** so students can scan and join right away.
+2. Open the generated URL, click **Create New Session**, and click **Show Join QR**.
 
-> **Tip for Render free tier:** Free instances sleep after 15 minutes of inactivity. Open your URL ~1 minute before class starts to wake it up.
-
-### Option 2: Launch Instantly in GitHub Codespaces (Zero External Accounts)
+### Option 3: Launch Instantly in GitHub Codespaces (Zero External Accounts)
 1. On this GitHub repo page, click **Code → Codespaces → Create codespace on main**.
 2. Once the terminal opens, run:
    ```bash

@@ -34,19 +34,58 @@ export interface RunningAppServer {
   close: () => Promise<void>;
 }
 
+function parseAllowedOrigins(raw?: string): '*' | string[] | false {
+  const value = (raw ?? process.env.CORS_ORIGIN ?? '').trim();
+  if (!value) return false;
+  if (value === '*') return '*';
+  const list = value
+    .split(',')
+    .map((item) => item.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+  return list.length > 0 ? list : false;
+}
+
 export async function createAppServer(opts?: {
   port?: number;
   host?: string;
   storagePath?: string;
+  corsOrigin?: string;
 }): Promise<RunningAppServer> {
   const store = await GameStore.create(opts?.storagePath);
+  const allowedOrigins = parseAllowedOrigins(opts?.corsOrigin);
+
   const app = express();
   app.set('trust proxy', 1);
   app.use(express.json({ limit: '256kb' }));
 
+  // CORS middleware for split frontend/backend deployments (e.g., Cloudflare Worker + Google Cloud Run)
+  app.use('/api', (req, res, next) => {
+    const reqOrigin = typeof req.headers.origin === 'string' ? req.headers.origin.replace(/\/+$/, '') : '';
+    if (allowedOrigins === '*') {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    } else if (Array.isArray(allowedOrigins) && reqOrigin && allowedOrigins.includes(reqOrigin)) {
+      res.setHeader('Access-Control-Allow-Origin', reqOrigin);
+      res.setHeader('Vary', 'Origin');
+    }
+
+    if (allowedOrigins !== false) {
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Host-Secret');
+    }
+
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
+    next();
+  });
+
   const httpServer = http.createServer(app);
   const io = new SocketIOServer(httpServer, {
-    cors: { origin: false },
+    cors: {
+      origin: allowedOrigins,
+      methods: ['GET', 'POST'],
+    },
   });
 
   // Track active connections per roomCode -> groupId -> count
@@ -118,6 +157,13 @@ export async function createAppServer(opts?: {
 
   // REST API
   app.use('/api', createApiRouter(store, (roomCode) => broadcastRoomFull(roomCode)));
+
+  // Runtime frontend config (overridden by Cloudflare Worker when split-hosted)
+  app.get('/config.js', (_req, res) => {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send('window.GUESSK_CONFIG = { apiBaseUrl: "" };\n');
+  });
 
   // Static files & preserved offline version
   app.use(express.static(PUBLIC_DIR));

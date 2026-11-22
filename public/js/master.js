@@ -1,5 +1,7 @@
 (function () {
   const {
+    apiUrl,
+    createSocket,
     escapeHtml,
     formatTime,
     formatScore,
@@ -286,7 +288,7 @@
     }
 
     setConnStatus(false, 'Connecting…');
-    socket = window.io();
+    socket = createSocket();
 
     socket.on('connect', () => {
       setConnStatus(true, 'Live');
@@ -1111,7 +1113,10 @@
     qrSvgContainer.innerHTML = '<p class="small">Loading QR…</p>';
     qrModal.hidden = false;
     try {
-      const res = await fetch(`/api/sessions/${encodeURIComponent(roomCode)}/qr`);
+      const qrEndpoint = apiUrl(
+        `/api/sessions/${encodeURIComponent(roomCode)}/qr?appOrigin=${encodeURIComponent(window.location.origin)}`
+      );
+      const res = await fetch(qrEndpoint);
       if (!res.ok) throw new Error('Failed to load QR code.');
       qrSvgContainer.innerHTML = await res.text();
     } catch (err) {
@@ -1153,7 +1158,9 @@
     if (!hostSecret) return;
     const viewingRound = getViewingRound();
     const roundQuery = viewingRound ? `&round=${viewingRound.roundNumber}` : '';
-    const url = `/api/sessions/${encodeURIComponent(roomCode)}/export/${endpoint}?hostSecret=${encodeURIComponent(hostSecret)}${roundQuery}`;
+    const url = apiUrl(
+      `/api/sessions/${encodeURIComponent(roomCode)}/export/${endpoint}?hostSecret=${encodeURIComponent(hostSecret)}${roundQuery}`
+    );
     window.location.href = url;
   }
 

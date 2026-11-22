@@ -288,3 +288,51 @@ test('SQLite persistence preserves sessions, rounds, and cumulative totals acros
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
+
+test('Split hosting CORS, preflight, /config.js, and Origin-aware join/QR URLs work cleanly', async () => {
+  const cfOrigin = 'https://guessk-web.example.workers.dev';
+  const server = await createAppServer({
+    port: 0,
+    host: '127.0.0.1',
+    storagePath: ':memory:',
+    corsOrigin: cfOrigin,
+  });
+  const baseUrl = `http://127.0.0.1:${server.port}`;
+
+  try {
+    // /config.js served cleanly on Node
+    const cfgRes = await fetch(`${baseUrl}/config.js`);
+    assert.equal(cfgRes.status, 200);
+    assert.match(await cfgRes.text(), /GUESSK_CONFIG/);
+
+    // Preflight OPTIONS request returns 204 with allowed origin
+    const preflight = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'OPTIONS',
+      headers: { Origin: cfOrigin },
+    });
+    assert.equal(preflight.status, 204);
+    assert.equal(preflight.headers.get('access-control-allow-origin'), cfOrigin);
+
+    // Creating a session from Cloudflare origin sets joinUrl to Cloudflare domain
+    const createRes = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: cfOrigin,
+      },
+      body: JSON.stringify({ passcode: 'split123' }),
+    });
+    assert.equal(createRes.status, 201);
+    assert.equal(createRes.headers.get('access-control-allow-origin'), cfOrigin);
+    const created = (await createRes.json()) as { roomCode: string; joinUrl: string };
+    assert.equal(created.joinUrl, `${cfOrigin}/play/${created.roomCode}`);
+
+    // Disallowed origin does not receive ACAO header
+    const otherRes = await fetch(`${baseUrl}/api/health`, {
+      headers: { Origin: 'https://evil.example.com' },
+    });
+    assert.equal(otherRes.headers.get('access-control-allow-origin'), null);
+  } finally {
+    await server.close();
+  }
+});

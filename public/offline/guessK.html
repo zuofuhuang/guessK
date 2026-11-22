@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guess the Hidden K</title>
+    <style>
+      :root {
+        --bg: #f3ecde;
+        --panel: #fffaf2;
+        --panel-strong: #fffdf9;
+        --ink: #24313b;
+        --muted: #64717a;
+        --line: #decdb8;
+        --accent: #bf673d;
+        --accent-deep: #944622;
+        --soft: #ead9c3;
+        --success: #2f7c49;
+        --shadow: 0 18px 42px rgba(78, 56, 31, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top, rgba(255, 255, 255, 0.82), transparent 32%),
+          linear-gradient(180deg, #efe4d2 0%, var(--bg) 45%, #e7d8c1 100%);
+      }
+
+      .page {
+        width: min(1040px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 2rem 0 3rem;
+      }
+
+      .hero {
+        padding: 0.75rem 0 1.4rem;
+      }
+
+      .eyebrow {
+        margin: 0 0 0.45rem;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--accent-deep);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.4rem, 5vw, 4.3rem);
+        line-height: 0.97;
+      }
+
+      .subtitle {
+        max-width: 42rem;
+        margin: 0.95rem 0 0;
+        color: var(--muted);
+        font-size: 1.08rem;
+        line-height: 1.55;
+      }
+
+      .rules-card {
+        margin-top: 1rem;
+        max-width: 52rem;
+        padding: 1rem 1.1rem;
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: rgba(255, 250, 242, 0.82);
+        box-shadow: var(--shadow);
+      }
+
+      .rules-card h2 {
+        margin-bottom: 0.75rem;
+      }
+
+      .rules-list {
+        margin: 0;
+        padding-left: 1.4rem;
+        color: var(--ink);
+        line-height: 1.6;
+      }
+
+      .rules-list li + li {
+        margin-top: 0.65rem;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 1.25rem;
+      }
+
+      .card {
+        background: linear-gradient(180deg, var(--panel-strong), var(--panel));
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        box-shadow: var(--shadow);
+      }
+
+      .sidebar,
+      .content {
+        padding: 1.25rem;
+      }
+
+      .section + .section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--line);
+      }
+
+      h2 {
+        margin: 0 0 0.9rem;
+        font-size: 1.3rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.45rem;
+        font-weight: 700;
+      }
+
+      input {
+        width: 100%;
+        padding: 0.85rem 0.95rem;
+        border-radius: 15px;
+        border: 1px solid #cdbca6;
+        background: #fff;
+        color: var(--ink);
+        font: inherit;
+      }
+
+      input:focus {
+        outline: 3px solid rgba(191, 103, 61, 0.18);
+        border-color: var(--accent);
+      }
+
+      .button-stack,
+      .button-grid {
+        display: grid;
+        gap: 0.75rem;
+        margin-top: 0.85rem;
+      }
+
+      .button-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 0.9rem 1rem;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 160ms ease, background 160ms ease, opacity 160ms ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .primary {
+        color: #fff;
+        background: var(--accent);
+      }
+
+      .primary:hover {
+        background: var(--accent-deep);
+      }
+
+      .secondary {
+        color: var(--ink);
+        background: var(--soft);
+      }
+
+      .secondary:hover {
+        background: #e0c9ae;
+      }
+
+      .ghost {
+        color: var(--accent-deep);
+        background: transparent;
+        border: 1px solid #d8b99d;
+      }
+
+      .ghost:hover {
+        background: rgba(191, 103, 61, 0.08);
+      }
+
+      .helper,
+      .small {
+        margin: 0.65rem 0 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.8rem;
+      }
+
+      .stat {
+        padding: 1rem;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid #eadfce;
+      }
+
+      .stat-label {
+        display: block;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.78rem;
+      }
+
+      .stat-value {
+        display: block;
+        margin-top: 0.25rem;
+        font-weight: 700;
+        font-size: 1.72rem;
+      }
+
+      .board {
+        margin-top: 1rem;
+        min-height: 280px;
+        padding: 1rem;
+        border-radius: 24px;
+        border: 1px dashed #d7c5ad;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 250, 242, 0.98)),
+          repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 1rem,
+            rgba(191, 103, 61, 0.04) 1rem,
+            rgba(191, 103, 61, 0.04) 1.08rem
+          );
+      }
+
+      .numbers {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        align-content: flex-start;
+      }
+
+      .chip {
+        padding: 0.6rem 0.82rem;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid #e4d7c5;
+        box-shadow: 0 8px 20px rgba(83, 54, 29, 0.08);
+        font-weight: 700;
+        font-size: 1.05rem;
+      }
+
+      .empty {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.6;
+      }
+
+      .reveal-box {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 20px;
+        border: 1px solid #ead9c4;
+        background: #fbf4ea;
+      }
+
+      .reveal-value {
+        margin-top: 0.65rem;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--success);
+      }
+
+      .fraction {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        vertical-align: middle;
+        margin-left: 0.35rem;
+      }
+
+      .fraction-top {
+        padding: 0 0.5rem 0.2rem;
+        border-bottom: 2px solid var(--ink);
+        font-weight: 700;
+      }
+
+      .fraction-bottom {
+        padding: 0.2rem 0.5rem 0;
+      }
+
+      .calculator {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .score-output {
+        margin-top: 0.2rem;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--success);
+      }
+
+      @media (max-width: 860px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .stats,
+        .button-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+      }
+
+      @media (max-width: 520px) {
+        .page {
+          width: min(100% - 1rem, 1040px);
+        }
+
+        .stats,
+        .button-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <p class="eyebrow">Intro Stats Classroom Demo</p>
+        <h1>Guess the Hidden K</h1>
+        <p class="subtitle">
+          I will submit a secret <strong>K</strong> under someone&apos;s watch, then show
+          the class a sample of generated numbers without revealing K until the end.
+        </p>
+        <div class="rules-card">
+          <h2>Rules</h2>
+          <ol class="rules-list">
+            <li>
+              Score =
+              <span class="fraction">
+                <span class="fraction-top">100</span>
+                <span class="fraction-bottom">
+                  number of numbers requested + |guessed K - actual K|
+                </span>
+              </span>
+            </li>
+            <li>Each draw is independent, so the same number can appear more than once.</li>
+            <li>
+              Each group can request as many or as few numbers as they want, but may
+              submit only one guess.
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="layout">
+        <aside class="card sidebar">
+          <div class="section">
+            <h2>Round Setup</h2>
+            <label for="k-input">Hidden K</label>
+            <input id="k-input" type="text" inputmode="numeric" autocomplete="off" value="•" />
+            <div class="button-stack">
+              <button id="start-btn" class="primary">Start New Round</button>
+            </div>
+            <p class="helper">
+              Starting a new round updates the hidden K, clears the numbers, and hides
+              the answer again.
+            </p>
+            <p class="small">
+              Click the field and type the new value for K. The screen will show one
+              dot per digit while keeping the actual value hidden.
+            </p>
+          </div>
+
+          <div class="section">
+            <h2>Generate Numbers</h2>
+            <div class="button-grid">
+              <button class="secondary generate-btn" data-count="1">Generate 1</button>
+              <button class="secondary generate-btn" data-count="3">Generate 3</button>
+              <button class="secondary generate-btn" data-count="5">Generate 5</button>
+              <button class="secondary generate-btn" data-count="10">Generate 10</button>
+            </div>
+            <div class="button-stack">
+              <button id="clear-btn" class="ghost">Clear Numbers</button>
+            </div>
+            <p class="helper">
+              Numbers are displayed in numerical order automatically, and repeated
+              values are allowed.
+            </p>
+          </div>
+
+          <div class="section">
+            <h2>Reveal</h2>
+            <div class="button-stack">
+              <button id="reveal-btn" class="primary">Reveal K</button>
+              <button id="hide-btn" class="ghost">Hide K Again</button>
+            </div>
+          </div>
+        </aside>
+
+        <section class="card content">
+          <h2>Sample on Screen</h2>
+          <div class="stats">
+            <div class="stat">
+              <span class="stat-label">Count</span>
+              <span id="count-stat" class="stat-value">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Smallest</span>
+              <span id="min-stat" class="stat-value">-</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Largest</span>
+              <span id="max-stat" class="stat-value">-</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Status</span>
+              <span id="status-stat" class="stat-value">Ready</span>
+            </div>
+          </div>
+
+          <div class="board">
+            <div id="numbers" class="numbers"></div>
+            <p id="empty-state" class="empty">
+              No numbers yet. Start a round and generate a sample.
+            </p>
+          </div>
+
+          <div class="reveal-box">
+            <strong>Hidden Answer</strong>
+            <p id="reveal-text" class="small">K is currently hidden.</p>
+            <div id="reveal-value" class="reveal-value"></div>
+          </div>
+
+          <div class="reveal-box">
+            <strong>Score</strong>
+            <p class="small">
+              Enter the number requested and the absolute difference to calculate the
+              score.
+            </p>
+            <div class="calculator">
+              <label for="requested-input">Number requested</label>
+              <input id="requested-input" type="number" min="1" step="1" value="10" />
+              <label for="difference-input">Absolute difference</label>
+              <input id="difference-input" type="number" min="0" step="1" value="0" />
+              <div>
+                <span class="stat-label">Score</span>
+                <div id="score-output" class="score-output">10.00</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const kInput = document.getElementById("k-input");
+      const startBtn = document.getElementById("start-btn");
+      const clearBtn = document.getElementById("clear-btn");
+      const revealBtn = document.getElementById("reveal-btn");
+      const hideBtn = document.getElementById("hide-btn");
+      const generateButtons = Array.from(document.querySelectorAll(".generate-btn"));
+      const countStat = document.getElementById("count-stat");
+      const minStat = document.getElementById("min-stat");
+      const maxStat = document.getElementById("max-stat");
+      const statusStat = document.getElementById("status-stat");
+      const numbersEl = document.getElementById("numbers");
+      const emptyStateEl = document.getElementById("empty-state");
+      const revealText = document.getElementById("reveal-text");
+      const revealValue = document.getElementById("reveal-value");
+      const requestedInput = document.getElementById("requested-input");
+      const differenceInput = document.getElementById("difference-input");
+      const scoreOutput = document.getElementById("score-output");
+
+      let secretK = 20;
+      let secretKBuffer = "20";
+      let draws = [];
+      let isRevealed = false;
+      let replaceOnNextDigit = false;
+
+      function randomIntFrom1To(max) {
+        return Math.floor(Math.random() * max) + 1;
+      }
+
+      function updateStats() {
+        countStat.textContent = String(draws.length);
+        minStat.textContent = draws.length ? String(Math.min(...draws)) : "-";
+        maxStat.textContent = draws.length ? String(Math.max(...draws)) : "-";
+        statusStat.textContent = draws.length ? "Sample Ready" : "Ready";
+      }
+
+      function renderNumbers() {
+        numbersEl.innerHTML = "";
+
+        if (!draws.length) {
+          emptyStateEl.hidden = false;
+          updateStats();
+          return;
+        }
+
+        emptyStateEl.hidden = true;
+        const sortedDraws = [...draws].sort((a, b) => a - b);
+
+        sortedDraws.forEach((value) => {
+          const chip = document.createElement("span");
+          chip.className = "chip";
+          chip.textContent = String(value);
+          numbersEl.appendChild(chip);
+        });
+
+        updateStats();
+      }
+
+      function renderReveal() {
+        if (isRevealed) {
+          revealText.textContent = "The hidden value has been revealed.";
+          revealValue.textContent = `K = ${secretK}`;
+        } else {
+          revealText.textContent = "K is currently hidden.";
+          revealValue.textContent = "";
+        }
+      }
+
+      function updateScore() {
+        const requested = Number.parseInt(requestedInput.value, 10);
+        const difference = Number.parseInt(differenceInput.value, 10);
+
+        if (!Number.isInteger(requested) || requested < 1 || !Number.isInteger(difference) || difference < 0) {
+          scoreOutput.textContent = "Invalid";
+          return;
+        }
+
+        const score = 100 / (requested + difference);
+        scoreOutput.textContent = score.toFixed(2);
+      }
+
+      function startRound() {
+        const proposedK = Number.parseInt(secretKBuffer, 10);
+
+        if (!Number.isInteger(proposedK) || proposedK < 2) {
+          window.alert("Please enter an integer K of at least 2.");
+          kInput.focus();
+          return;
+        }
+
+        secretK = proposedK;
+        draws = [];
+        isRevealed = false;
+        renderNumbers();
+        renderReveal();
+      }
+
+      function addDraws(count) {
+        for (let index = 0; index < count; index += 1) {
+          draws.push(randomIntFrom1To(secretK));
+        }
+
+        renderNumbers();
+      }
+
+      function clearDraws() {
+        draws = [];
+        renderNumbers();
+      }
+
+      startBtn.addEventListener("click", startRound);
+      clearBtn.addEventListener("click", clearDraws);
+      revealBtn.addEventListener("click", () => {
+        isRevealed = true;
+        renderReveal();
+      });
+      hideBtn.addEventListener("click", () => {
+        isRevealed = false;
+        renderReveal();
+      });
+
+      generateButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const count = Number.parseInt(button.dataset.count || "0", 10);
+          addDraws(count);
+        });
+      });
+
+      function syncMaskedKInput() {
+        kInput.value = secretKBuffer ? "•".repeat(secretKBuffer.length) : "";
+      }
+
+      kInput.addEventListener("focus", () => {
+        replaceOnNextDigit = true;
+      });
+
+      kInput.addEventListener("blur", () => {
+        syncMaskedKInput();
+      });
+
+      kInput.addEventListener("keydown", (event) => {
+        const { key } = event;
+
+        if (key === "Tab") {
+          return;
+        }
+
+        if (key === "Enter") {
+          event.preventDefault();
+          startRound();
+          return;
+        }
+
+        if (key === "Backspace") {
+          event.preventDefault();
+          secretKBuffer = secretKBuffer.slice(0, -1);
+          replaceOnNextDigit = false;
+          syncMaskedKInput();
+          return;
+        }
+
+        if (key === "Delete") {
+          event.preventDefault();
+          secretKBuffer = "";
+          replaceOnNextDigit = false;
+          syncMaskedKInput();
+          return;
+        }
+
+        if (/^\d$/.test(key)) {
+          event.preventDefault();
+          secretKBuffer = replaceOnNextDigit ? key : `${secretKBuffer}${key}`;
+          replaceOnNextDigit = false;
+          syncMaskedKInput();
+          return;
+        }
+
+        if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(key)) {
+          event.preventDefault();
+          return;
+        }
+
+        if (key.length === 1) {
+          event.preventDefault();
+        }
+      });
+
+      kInput.addEventListener("paste", (event) => {
+        event.preventDefault();
+        const pasted = (event.clipboardData?.getData("text") || "").replace(/\D/g, "");
+
+        if (!pasted) {
+          return;
+        }
+
+        secretKBuffer = replaceOnNextDigit ? pasted : `${secretKBuffer}${pasted}`;
+        replaceOnNextDigit = false;
+        syncMaskedKInput();
+      });
+
+      requestedInput.addEventListener("input", updateScore);
+      differenceInput.addEventListener("input", updateScore);
+
+      syncMaskedKInput();
+      renderNumbers();
+      renderReveal();
+      updateScore();
+    </script>
+  </body>
+</html>

@@ -1,5 +1,6 @@
 (function () {
   const {
+    createSocket,
     escapeHtml,
     formatScore,
     formatNum,
@@ -226,7 +227,7 @@
     }
 
     setConnectionStatus(false, 'Connecting…');
-    socket = window.io();
+    socket = createSocket();
 
     socket.on('connect', () => {
       setConnectionStatus(true, 'Live');

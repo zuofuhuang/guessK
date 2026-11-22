@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "guessk-web",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-11-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    // Set BACKEND_URL to your Google Cloud Run URL (e.g. "https://guessk-online-xxxx.run.app")
+    // either here or in Cloudflare Dashboard -> Workers & Pages -> Settings -> Variables and Secrets.
+    "BACKEND_URL": ""
+  }
+}
